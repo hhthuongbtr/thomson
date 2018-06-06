@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="Thomson",
-    version="0.0.2",
+    version="0.0.3",
     author="Thuong Huynh",
     author_email="hhthuongbtr@gmail.com",
     description="Thomson API",

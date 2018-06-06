@@ -1,3 +1,4 @@
+import time
 import json
 from xml.dom import minidom
 from .thomson import Thomson
@@ -199,6 +200,18 @@ class Job:
                     })
         return args
 
+    def get_job_status(self):
+        agrs = []
+        agrs.append({
+            'total'     :self.count_job(),
+            'running'   :self.count_Running(),
+            'completed' :self.count_Completed(),
+            'waiting'   :self.count_Waiting(),
+            'paused'    :self.count_Paused(),
+            'aborted'   :self.count_Aborted()
+            })
+        return json.dumps(agrs)
+
 class JobDetail:
     def __init__(self, host, user, passwd, jid):
         self.ts = Thomson(host, user, passwd)
@@ -281,14 +294,14 @@ class JobDetail:
     def restart(self):
         try:
             if self.abort() == 'OK':
-                return self.start(user)
+                return self.start()
             else :
                 message = 'can not stop job'
                 return message
         except Exception as identifier:
             return identifier
 
-    def abort(self, user):
+    def abort(self):
         from xmlReq_JobDetailReq import ABORT_HEADERS, ABORT_BODY
         headers = ABORT_HEADERS
         body = ABORT_BODY
