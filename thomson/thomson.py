@@ -2,7 +2,7 @@ import json
 from xml.dom import minidom
 import requests# $ pip install requests
 from requests.auth import HTTPDigestAuth
-from utils import DateTime as ThonsonTime
+from .utils import DateTime as ThonsonTime
 
 class Thomson:
     def __init__(self, host, user, passwd):
@@ -19,7 +19,7 @@ class Thomson:
         return response_xml
 
     def get_datetime(self):
-        from xmlReq import DateAndTimeReq
+        from . import xmlReq_DateAndTimeReq as DateAndTimeReq
         headers = DateAndTimeReq.HEADERS
         body = DateAndTimeReq.BODY
         response_xml = self.get_response(headers, body)
@@ -38,7 +38,7 @@ class Thomson:
         return json.dumps(args)
 
     def get_mountpoint(self):
-        from xmlReq import MountPointReq
+        from . import xmlReq_MountPointReq as MountPointReq
         headers = MountPointReq.HEADERS
         body = MountPointReq.BODY
         response_xml = self.get_response(headers, body)
@@ -53,7 +53,7 @@ class Thomson:
         return json.dumps(args)
 
     def get_system_status(self):
-        from xmlReq import SystemReq
+        from . import xmlReq_SystemReq as SystemReq
         headers = SystemReq.HEADERS
         body = SystemReq.BODY
         response_xml = self.get_response(headers, body)
@@ -78,21 +78,8 @@ class Thomson:
                     })
         return json.dumps(agrs)
 
-    def get_job_status(self):
-        agrs = []
-        agrs.append({
-            'total'     :Job(self.name).count_job(),
-            'running'   :Job(self.name).count_Running(),
-            'completed' :Job(self.name).count_Completed(),
-            'waiting'   :Job(self.name).count_Waiting(),
-            'paused'    :Job(self.name).count_Paused(),
-            'aborted'   :Job(self.name).count_Aborted()
-            })
-        return json.dumps(agrs)
-
-
     def get_license_xml(self):
-        from xmlReq.SystemReq import LICENSE_HEADERS, LICENSE_BODY
+        from .xmlReq_SystemReq import LICENSE_HEADERS, LICENSE_BODY
         headers = LICENSE_HEADERS
         body = LICENSE_BODY
         response_xml = self.get_response(headers, body)

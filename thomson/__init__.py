@@ -1,6 +1,6 @@
 name = "Thomson"
-from thomson import Thomson
-from job import Job
-from workflow import Workflow
-from log import Log
-from node import Node
+from .thomson import Thomson
+from .node import Node, NodeDetail
+from .job import Job, JobDetail
+from .workflow import Workflow, WorkflowDetail
+from .log import Log
