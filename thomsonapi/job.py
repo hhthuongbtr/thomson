@@ -216,6 +216,9 @@ class JobDetail:
     def __init__(self, host, user, passwd, jid):
         self.ts = Thomson(host, user, passwd)
         self.jid = jid
+        from xmlReq_JobDetailReq import HEADERS, BODY
+        self.headers = HEADERS
+        self.body = BODY.replace('JobID', str(self.jid))
 
     def parse_xml(self, xml):
         xmldoc = minidom.parseString(xml)
@@ -243,11 +246,7 @@ class JobDetail:
         return json.dumps(args)
 
     def get_param_xml(self):
-        from xmlReq_JobDetailReq import HEADERS, BODY
-        headers = HEADERS
-        body = BODY
-        body = body.replace('JobID', str(self.jid))
-        response_xml = self.ts.get_response(headers, body)
+        response_xml = self.ts.get_response(self.headers, self.body)
         return response_xml
 
     def get_param(self):
