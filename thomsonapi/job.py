@@ -192,10 +192,10 @@ class Job:
                             'status'    : Status,
                             'jid'       : JId,
                             'prog'      : Prog,
-                            'startdate' : ThonsonTime().conver_UTC_2_unix_timestamp(StartDate) \
+                            'startdate' : ThomsonTime().conver_UTC_2_unix_timestamp(StartDate) \
                             if StartDate else '',
                             'ver'       : Ver,
-                            'enddate'   : ThonsonTime().conver_UTC_2_unix_timestamp(EndDate) \
+                            'enddate'   : ThomsonTime().conver_UTC_2_unix_timestamp(EndDate) \
                             if EndDate else ''
                     })
         return args
