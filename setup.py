@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ThomsonApi",
+    name="thomsonapi",
     version="0.0.1",
     author="Thuong Huynh",
     author_email="hhthuongbtr@gmail.com",
