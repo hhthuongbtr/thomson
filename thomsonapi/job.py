@@ -193,10 +193,10 @@ class Job:
                             'jid'       : JId,
                             'prog'      : Prog,
                             'startdate' : ThomsonTime().conver_UTC_2_unix_timestamp(StartDate) \
-                            if StartDate else '',
+                            if StartDate else None,
                             'ver'       : Ver,
                             'enddate'   : ThomsonTime().conver_UTC_2_unix_timestamp(EndDate) \
-                            if EndDate else ''
+                            if EndDate else None
                     })
         return args
 
@@ -214,6 +214,9 @@ class Job:
 
 class JobDetail:
     def __init__(self, host, user, passwd, jid):
+        self.host = host
+        self.user = user
+        self.passwd = passwd
         self.ts = Thomson(host, user, passwd)
         self.jid = jid
         from xmlReq_JobDetailReq import HEADERS, BODY
@@ -315,4 +318,121 @@ class JobDetail:
         body = body.replace('JobID', str(self.jid))
         response_xml = self.ts.get_response(headers, body)
         return self.parse_status(response_xml)
+
+    def get_info(self):
+        jid = int(self.jid)
+        args={}
+        State = None
+        Status = None
+        JId = None
+        Prog = None
+        StartDate = None
+        Ver = None
+        EndDate = None
+        jobname = None
+        workflowIdRef = None
+
+        job = Job(self.host, self.user, self.passwd)
+        #print job.__class__.__dict__
+        job_xml = job.get_job_xml()
+        xmldoc = minidom.parseString(job_xml)
+        itemlist = xmldoc.getElementsByTagName('jGetList:JItem')
+        for job in itemlist:
+            str_tmp = str(job.attributes.items())
+            JId = job.attributes['JId'].value if "'JId'" in str_tmp else '-1'
+            if int(JId) == jid:
+                str_tmp = str(job.attributes.items())
+                State = job.attributes['State'].value if "'State'" in str_tmp else ''
+                Status = job.attributes['Status'].value if "'Status'" in str_tmp else ''
+                JId = job.attributes['JId'].value if "'JId'" in str_tmp else ''
+                #Prog = job.attributes['Prog'].value if "'Prog'" in str_tmp else ''
+                StartDate =  job.attributes['StartDate'].value \
+                if "'StartDate'" in str_tmp else ''
+                #Ver = job.attributes['Ver'].value if "'Ver'" in str_tmp else ''
+                EndDate = job.attributes['EndDate'].value if "'EndDate'" in str_tmp else ''
+                jobname, workflowIdRef = self.get_job_name() if JId else ''
+                break
+        args = {'jname'     : jobname,
+                'wid'       : workflowIdRef,
+                'wname'     : workflowIdRef[workflowIdRef.find("_")+1:] if workflowIdRef else "",
+                'state'     : State,
+                'status'    : Status,
+                'jid'       : int(JId),
+                'startdate' : ThomsonTime().conver_UTC_2_unix_timestamp(StartDate) if StartDate else None,
+                'enddate'   : ThomsonTime().conver_UTC_2_unix_timestamp(EndDate) if EndDate else None
+                }
+        return json.dumps(args)
+
+    def add_job_param_to_body(self, body):
+        job_info = self.get_info()
+        if not job_info:
+            return None
+        job_info = json.loads(job_info)
+        body = body.replace("[jid]", str(job_info['jid']))
+        body = body.replace("[wid]", job_info['wid'])
+        body = body.replace("[job_name]", job_info['jname'])
+        return body
+
+    def set_backup(self, value):
+        is_backup = value
+        from xmlReq_JobModifyReq import MODIFY_HEADERS, ACTIVE_BACKUP_BODY
+        headers = MODIFY_HEADERS
+        body = ACTIVE_BACKUP_BODY
+        body = self.add_job_param_to_body(body)
+        if not body:
+            return 1
+        body = body.replace("[is_backup]", is_backup)
+        print body
+        response_xml = self.ts.get_response(headers, body)
+        return self.parse_status(response_xml)
+
+    def set_main_ip_address(self, value):
+        ip_address = value
+        from xmlReq_JobModifyReq import MODIFY_HEADERS, MAIN_IP_ADDRESS_BODY
+        headers = MODIFY_HEADERS
+        body = MAIN_IP_ADDRESS_BODY
+        body = self.add_job_param_to_body(body)
+        if not body:
+            return 1
+        body = body.replace("[ip_address]", ip_address)
+        response_xml = self.ts.get_response(headers, body)
+        return self.parse_status(response_xml)
+
+    def set_main_udp_port(self, value):
+        udp_port = value
+        from xmlReq_JobModifyReq import MODIFY_HEADERS, MAIN_UDP_PORT_BODY
+        headers = MODIFY_HEADERS
+        body = MAIN_UDP_PORT_BODY
+        body = self.add_job_param_to_body(body)
+        if not body:
+            return 1
+        body = body.replace("[udp_port]", udp_port)
+        response_xml = self.ts.get_response(headers, body)
+        return self.parse_status(response_xml)
+
+
+    def set_backup_ip_address(self, value):
+        ip_address = value
+        from xmlReq_JobModifyReq import MODIFY_HEADERS, BACKUP_IP_ADDRESS_BODY
+        headers = MODIFY_HEADERS
+        body = BACKUP_IP_ADDRESS_BODY
+        body = self.add_job_param_to_body(body)
+        if not body:
+            return 1
+        body = body.replace("[ip_address]", ip_address)
+        response_xml = self.ts.get_response(headers, body)
+        return self.parse_status(response_xml)
+
+    def set_backup_udp_port(self, value):
+        udp_port = value
+        from xmlReq_JobModifyReq import MODIFY_HEADERS, BACKUP_UDP_PORT_BODY
+        headers = MODIFY_HEADERS
+        body = BACKUP_UDP_PORT_BODY
+        body = self.add_job_param_to_body(body)
+        if not body:
+            return 1
+        body = body.replace("[udp_port]", udp_port)
+        response_xml = self.ts.get_response(headers, body)
+        return self.parse_status(response_xml)
+
 
