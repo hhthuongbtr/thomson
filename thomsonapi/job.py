@@ -382,7 +382,6 @@ class JobDetail:
         if not body:
             return 1
         body = body.replace("[is_backup]", is_backup)
-        print body
         response_xml = self.ts.get_response(headers, body)
         return self.parse_status(response_xml)
 
