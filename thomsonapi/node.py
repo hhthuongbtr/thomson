@@ -1,6 +1,7 @@
 import json
 from xml.dom import minidom
 from .thomson import Thomson
+from .job import Job
 
 class Node:
     def __init__(self, host, user, passwd):
@@ -27,6 +28,30 @@ class Node:
         Mem =  dom_object.attributes['Mem'].value if "'Mem'" in text else '-1'
         AllocMem = dom_object.attributes['AllocMem'].value if "'AllocMem'" in text else '-1'
         return NStatus,Cpu,AllocCpu,Unreachable,NId,NState,Mem,AllocMem
+
+    def parse_xml_none_error(self, xml):
+        args = []
+        xmldoc = minidom.parseString(xml)
+        itemlist = xmldoc.getElementsByTagName('sGetNodesStats:RspSGNSOk')
+        for node in itemlist.item(0).childNodes:
+            NStatus,Cpu,AllocCpu,Unreachable,NId,NState,Mem,AllocMem = self.parse_dom_object(node)
+            args.append({'status'             : NStatus,
+                        'cpu'                 : int(Cpu),
+                        'alloccpu'            : int(AllocCpu),
+                        'uncreahable'         : Unreachable,
+                        'nid'                 : int(NId),
+                        'state'               : NState,
+                        'mem'                 : int(Mem),
+                        'allocmem'            : int(AllocMem)
+                })
+        return json.dumps(args)
+
+    def get_nodes(self):
+        """
+        get node without jcounter, jerror
+        """
+        xml = self.get_nodes_xml()
+        return self.parse_xml_none_error(xml)
 
     def parse_xml(self, xml):
         args = []
@@ -88,7 +113,7 @@ class NodeDetail:
         dom_node = self.get_dom_node()
         NStatus,Cpu,AllocCpu,Unreachable,NId,NState,Mem,AllocMem = self.node.parse_dom_object(dom_node)
         JError, JCounter = self.count_job_error()
-        job_list = Job(self.name).get_job_detail_by_job_id(array_jid)
+        job_list = Job(self.host, self.user, self.passwd).get_job_detail_by_job_id(array_jid)
         args.append({'status'             : NStatus,
                     'cpu'                 : int(Cpu),
                     'alloccpu'            : int(AllocCpu),
@@ -105,7 +130,7 @@ class NodeDetail:
 
     def count_job_error(self):
         array_jid = self.get_array_job_id()
-        job_list = Job(self.name).get_job_detail_by_job_id(array_jid)
+        job_list = Job(self.host, self.user, self.passwd).get_job_detail_by_job_id(array_jid)
         error=0
         for job in job_list:
             if job['status'] != 'Ok':
