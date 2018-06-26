@@ -34,6 +34,21 @@ class Job:
                 break
         return State,Status,JId,Prog,StartDate,EndDate,Ver,jobname,workflowIdRef,workflow_name
 
+    def parse_dom_object(self, dom_object): 
+        """
+         parse job without job_detail(jname, wname)
+        """
+        str_tmp = str(dom_object.attributes.items())
+        State = dom_object.attributes['State'].value if "'State'" in str_tmp else ''
+        Status = dom_object.attributes['Status'].value if "'Status'" in str_tmp else ''
+        JId = dom_object.attributes['JId'].value if "'JId'" in str_tmp else ''
+        Prog = dom_object.attributes['Prog'].value if "'Prog'" in str_tmp else ''
+        StartDate =  dom_object.attributes['StartDate'].value \
+        if "'StartDate'" in str_tmp else ''
+        Ver = dom_object.attributes['Ver'].value if "'Ver'" in str_tmp else ''
+        EndDate = dom_object.attributes['EndDate'].value if "'EndDate'" in str_tmp else ''
+        return State,Status,JId,Prog,StartDate,EndDate,Ver
+
     def parse_xml(self, xml):
         xmldoc = minidom.parseString(xml)
         itemlist = xmldoc.getElementsByTagName('jGetList:JItem')
@@ -212,6 +227,28 @@ class Job:
             })
         return json.dumps(agrs)
 
+    def get_job_non_jname(self):
+        """
+         parse_xml for database cache non jname, wname
+        """
+        job_xml = self.get_job_xml()
+        xmldoc = minidom.parseString(job_xml)
+        itemlist = xmldoc.getElementsByTagName('jGetList:JItem')
+        args=[]
+        for s in itemlist:
+            State,Status,JId,Prog,StartDate,EndDate,Ver = self.parse_dom_object(s)
+            args.append({'state'     : State,
+                        'status'    : Status,
+                        'jid'       : JId,
+                        'prog'      : Prog,
+                        'startdate' : ThomsonTime().conver_UTC_2_unix_timestamp(StartDate) \
+                            if StartDate else None,
+                        'ver'       : Ver,
+                        'enddate'   : ThomsonTime().conver_UTC_2_unix_timestamp(EndDate) \
+                            if EndDate else None
+                })
+        return args
+
 class JobDetail:
     def __init__(self, host, user, passwd, jid):
         self.host = host
@@ -267,6 +304,29 @@ class JobDetail:
         workflowIdRef = job.attributes['workflowIdRef'].value if \
         "'workflowIdRef'" in str(job.attributes.items()) else ''
         return jobname, workflowIdRef
+
+    def get_job_name_w_backup(self):
+        """
+         return jobname, wid, define backup true/false
+        """
+        response_xml = self.get_param_xml()
+        xmldoc = minidom.parseString(response_xml)
+        joblist = xmldoc.getElementsByTagName('wd:Job')
+        job = joblist[0]
+        paramlist = xmldoc.getElementsByTagName('wd:ParamDesc')
+        backup = 'false'
+        for item in paramlist:
+            tmp = item.attributes['name'].value if "'name'" in \
+             str(item.attributes.items()) else ''
+            if tmp == 'Define backup input':
+                backup = item.attributes['value'].value if "'value'" in str(item.attributes
+    .items()) else 'false '
+                break
+        jobname = job.attributes['name'].value if "'name'" in \
+        str(job.attributes.items()) else ''
+        workflowIdRef = job.attributes['workflowIdRef'].value if \
+        "'workflowIdRef'" in str(job.attributes.items()) else ''
+        return jobname, workflowIdRef, backup
         
     def parse_status(self, xml):
         result = 'NotOK'
